@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methodology · Index Gentium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: 'var(--bg)',
+            fg: 'var(--fg)',
+            muted: 'var(--muted)',
+            accent: 'var(--accent)',
+            card: 'var(--card)',
+            border: 'var(--border)',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            body: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #FAFBFC;
+      --fg: #1A2B3C;
+      --muted: #5C7089;
+      --accent: #3D6B99;
+      --card: #FFFFFF;
+      --border: #D8E1EB;
+      --status-pending: #8A9FB0;
+      --bg-subtle: #F1F5F9;
+      --type-temporal: #6B4C9A;
+      --type-spatial: #2D7D9A;
+      --type-network: #9A6B4C;
+    }
+
+    .dark {
+      --bg: #0F172A;
+      --fg: #E4EBF2;
+      --muted: #8BA3BC;
+      --accent: #93C5FD;
+      --card: #1E293B;
+      --border: #334155;
+      --status-pending: #64748B;
+      --bg-subtle: #172033;
+      --type-temporal: #A78BFA;
+      --type-spatial: #22D3EE;
+      --type-network: #FBBF24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-subtle); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* Custom Text Selection */
+    ::selection { background-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--fg); }
+    .dark ::selection { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      border-top: 3px solid var(--accent);
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(61, 107, 153, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(61, 107, 153, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .dark body::before {
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(147, 197, 253, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(147, 197, 253, 0.04) 0%, transparent 50%);
+    }
+
+    .main-content { flex: 1 0 auto; width: 100%; position: relative; z-index: 1; }
+    .site-footer { flex-shrink: 0; position: relative; z-index: 1; }
+
+    /* Header Styles */
+    .project-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--card) 85%, transparent);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: box-shadow 0.3s ease, background 0.3s ease;
+    }
+    
+    .project-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .project-header.scrolled::after { opacity: 0.4; }
+    .project-header.scrolled { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06); background: var(--card); }
+    .dark .project-header.scrolled { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25); }
+
+    .project-header-inner {
+      max-width: 56rem;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .project-identity {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      text-decoration: none;
+      transition: opacity 0.25s ease;
+    }
+    .project-identity:hover { opacity: 0.85; }
+    .project-identity:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+
+    .project-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 4px;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+    }
+    .project-identity:hover .project-logo { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+    .project-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .project-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--fg);
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+
+    .project-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.625rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    .nav-controls { display: flex; align-items: center; gap: 1.25rem; }
+
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      letter-spacing: 0.04em;
+    }
+
+    .breadcrumb-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .breadcrumb-nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 1px;
+      background: var(--accent);
+      transition: all 0.2s ease;
+      transform: translateX(-50%);
+    }
+    .breadcrumb-nav a:hover { color: var(--fg); }
+    .breadcrumb-nav a:hover::after { width: calc(100% - 1rem); }
+    .breadcrumb-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .breadcrumb-separator { color: var(--border); font-weight: 300; user-select: none; }
+
+    .breadcrumb-current {
+      color: var(--fg);
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      background: var(--bg-subtle);
+      border-radius: 2px;
+      border: 1px solid var(--border);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .theme-toggle:hover { color: var(--fg); border-color: var(--accent); transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    
+    .theme-toggle .icon-sun, 
+    .theme-toggle .icon-moon { 
+      position: absolute; 
+      transition: opacity 0.25s ease, transform 0.25s ease; 
+      width: 18px !important; 
+      height: 18px !important;
+    }
+
+    .theme-toggle .icon-moon { opacity: 1; transform: scale(1); }
+    .theme-toggle .icon-sun { opacity: 0; transform: scale(0.5); }
+    .dark .theme-toggle .icon-moon { opacity: 0; transform: scale(0.5); }
+    .dark .theme-toggle .icon-sun { opacity: 1; transform: scale(1); }
+
+    /* Animations & Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    
+    #representationGrid .method-card,
+    #techniqueGrid .method-card {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: 
+        opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), 
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.3s ease, 
+        box-shadow 0.3s ease;
+    }
+
+    .reveal.visible #representationGrid .method-card,
+    .reveal.visible #techniqueGrid .method-card {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal.visible #representationGrid .method-card:nth-child(1) { transition-delay: 0.05s; }
+    .reveal.visible #representationGrid .method-card:nth-child(2) { transition-delay: 0.1s; }
+    .reveal.visible #representationGrid .method-card:nth-child(3) { transition-delay: 0.15s; }
+    .reveal.visible #representationGrid .method-card:nth-child(4) { transition-delay: 0.2s; }
+    .reveal.visible #representationGrid .method-card:nth-child(5) { transition-delay: 0.25s; }
+    .reveal.visible #representationGrid .method-card:nth-child(6) { transition-delay: 0.3s; }
+    .reveal.visible #representationGrid .method-card:nth-child(7) { transition-delay: 0.35s; }
+    .reveal.visible #representationGrid .method-card:nth-child(8) { transition-delay: 0.4s; }
+
+    .reveal.visible #techniqueGrid .method-card:nth-child(1) { transition-delay: 0.1s; }
+    .reveal.visible #techniqueGrid .method-card:nth-child(2) { transition-delay: 0.2s; }
+    .reveal.visible #techniqueGrid .method-card:nth-child(3) { transition-delay: 0.3s; }
+    .reveal.visible #techniqueGrid .method-card:nth-child(4) { transition-delay: 0.4s; }
+
+    .delay-1 { transition-delay: 0.15s; }
+    .delay-2 { transition-delay: 0.3s; }
+    .delay-3 { transition-delay: 0.45s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .method-card { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* Typography */
+    .font-display { font-family: 'Cormorant Garamond', Georgia, serif; font-feature-settings: "kern", "liga"; }
+    .font-body { font-family: 'Inter', system-ui, sans-serif; }
+    .font-meta { font-family: 'JetBrains Mono', monospace; }
+
+    .type-hero { font-size: 3.25rem; line-height: 1.1; letter-spacing: -0.02em; }
+    @media (min-width: 768px) { .type-hero { font-size: 4rem; } }
+    .type-section { font-size: 1.5rem; line-height: 1.3; }
+    .type-card-title { font-size: 1.25rem; line-height: 1.3; }
+    .type-data-value { font-size: 2rem; line-height: 1; }
+    .type-body { font-size: 1rem; line-height: 1.75; letter-spacing: 0.01em; }
+    .type-secondary { font-size: 0.875rem; line-height: 1.5; }
+    .type-label { font-size: 0.75rem; line-height: 1.4; letter-spacing: 0.05em; }
+    .type-meta { font-size: 0.7rem; line-height: 1.4; }
+
+    /* Section Divider */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .section-divider::before, .section-divider::after {
+      content: '';
+      height: 1px;
+      flex: 1;
+      max-width: 120px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+    .section-divider .diamond { width: 6px; height: 6px; background: var(--border); transform: rotate(45deg); }
+
+    /* Definition/Lead Text */
+    .definition-lead {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.35rem;
+      line-height: 1.6;
+      color: var(--fg);
+      font-weight: 400;
+      position: relative;
+      hyphens: auto;
+      max-width: 52rem; 
+    }
+    
+    .definition-lead::before {
+      content: '';
+      position: absolute;
+      left: -1.5rem;
+      top: 0.25rem;
+      bottom: 0.25rem;
+      width: 2px;
+      background: var(--border);
+      transition: background 0.3s ease, height 0.3s ease;
+    }
+    .definition-lead:hover::before { background: var(--accent); }
+
+    @media (max-width: 768px) {
+      .definition-lead::before { display: none; }
+      .definition-lead { font-size: 1.25rem; }
+    }
+
+    /* Principle Highlight Box */
+    .principle-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-style: italic;
+      color: var(--muted);
+    }
+    
+    /* Method Cards */
+    .method-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px; 
+      padding: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .method-card::before { 
+      content: ''; 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 0; 
+      height: 2px; 
+      background: var(--accent); 
+      transition: width 0.3s ease; 
+    }
+    
+    .method-card:hover::before { width: 100%; }
+    .method-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(0,0,0,0.06); border-color: var(--accent); }
+    
+    .method-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    
+    .method-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      opacity: 0.8;
+    }
+
+    .method-list {
+      list-style: none;
+      margin-top: 0.5rem;
+      padding-left: 0.5rem;
+      border-left: 1px solid var(--border);
+    }
+    
+    .method-list li {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Footer */
+    .site-footer { background: var(--card); border-top: 1px solid var(--border); }
+    .footer-identity { color: var(--fg); }
+    .footer-muted { color: var(--muted); }
+    .footer-label { color: var(--muted); opacity: 0.7; }
+    
+    .footer-link { 
+      color: var(--muted); 
+      transition: color 0.2s ease; 
+      position: relative;
+      text-decoration: none;
+    }
+    .footer-link:hover { color: var(--fg); }
+    .footer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .footer-value { color: var(--fg); opacity: 0.85; }
+    .footer-divider { border-color: var(--border); }
+
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: var(--accent);
+      z-index: 101;
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Project Header -->
+  <header class="project-header" id="projectHeader">
+    <div class="project-header-inner">
+      <a href="index.html" class="project-identity" aria-label="Return to Index Gentium">
+        <div class="project-logo">
+          <img src="img/logo.png" alt="Index Gentium Logo" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="project-title">Index Gentium</div>
+          <div class="project-subtitle">Laboratorium · Arbitristae</div>
+        </div>
+      </a>
+
+      <div class="nav-controls">
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a href="index.html"><span>Gentium</span></a>
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-current">Methodology</span>
+        </nav>
+
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" type="button">
+          <svg class="icon-moon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/>
+          </svg>
+          <svg class="icon-sun" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0a3.75 3.75 0 017.5 0z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+  <div class="main-content w-full max-w-4xl mx-auto px-6 py-16 md:py-24">
+    
+    <!-- [1] Hero Section -->
+    <header class="mb-12 reveal">
+      <h1 class="font-display type-hero font-medium text-fg mb-2">Methodology</h1>
+      <p class="font-display type-section italic text-muted">Structura & Ratio</p>
+    </header>
+
+    <!-- [2] Objective Section -->
+    <section class="reveal delay-1">
+      <div class="definition-lead text-muted mb-8">
+        The goal of the Country Index is to construct a comprehensive, multi-dimensional representation of sovereign entities. This is achieved by decomposing national complexity into distinct analytical spaces—legal, economic, physical, and social—thereby rendering the dynamics of states intelligible and comparable.
+      </div>
+    </section>
+
+    <div class="section-divider reveal delay-1">
+      <span class="diamond"></span>
+    </div>
+
+    <!-- [3] Representation Spaces ("What?") -->
+    <section class="reveal delay-2">
+      <div class="text-center mb-8">
+        <h2 class="font-display type-section text-fg mb-1">The Object of Inquiry</h2>
+        <p class="font-body type-secondary text-muted">Representation Spaces</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="representationGrid">
+        
+        <!-- Product Space -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M3 3v18h18"/>
+                <path d="M7 16l4-4 4 4 5-6"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Product Space</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Mapping the landscape of economic production, industrial complexity, and export capabilities.</p>
+        </div>
+
+        <!-- Legal Space -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M12 2L20 6v6c0 5.5-3.8 10.7-8 12-4.2-1.3-8-6.5-8-12V6l8-4z"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Legal Space</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Codifying the regulatory frameworks, legislative structures, and juridical constraints.</p>
+        </div>
+
+        <!-- Technique Space -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Technique Space</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Inventory of available methodologies, tools, and productive capabilities.</p>
+        </div>
+
+        <!-- Physical Substrate -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Physical Substrate</h3>
+          </div>
+          <p class="font-body type-secondary text-muted mb-3">The material foundations upon which society rests.</p>
+          <ul class="method-list">
+            <li>Environmental Representation</li>
+            <li>Public Infrastructure Representation</li>
+          </ul>
+        </div>
+
+        <!-- Actor Set -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Actor Set</h3>
+          </div>
+          <p class="font-body type-secondary text-muted mb-3">Agents operating within the defined spaces.</p>
+          <ul class="method-list">
+            <li>Human Actors</li>
+            <li>Public Organizations</li>
+            <li>Non-Public Non-Profit Organizations</li>
+            <li>Profit Organizations</li>
+          </ul>
+        </div>
+
+        <!-- Cultural & Security -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Cultural Representation</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Norms, values, shared narratives, and collective identity structures.</p>
+        </div>
+
+        <!-- Security Representation -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Security Representation</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Threat landscapes, defense capabilities, and stability metrics.</p>
+        </div>
+
+        <!-- External Interactions -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">External Interactions</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Diplomatic relations, trade flows, and transnational linkages.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="section-divider reveal delay-2">
+      <span class="diamond"></span>
+    </div>
+
+    <!-- [4] Guiding Principles -->
+    <section class="reveal delay-3">
+      <div class="text-center mb-8">
+        <h2 class="font-display type-section text-fg mb-1">Guiding Principles</h2>
+        <p class="font-body type-secondary text-muted">Inference & Data</p>
+      </div>
+
+      <div class="principle-box">
+        <p class="font-body type-body text-fg/80">
+          "Use representation forms that can be powered by large-scale data inference—taking raw data such as laws, regulations, or records, and inferring structured metrics from them."
+        </p>
+      </div>
+    </section>
+
+    <div class="section-divider reveal delay-3">
+      <span class="diamond"></span>
+    </div>
+
+    <!-- [5] Representation Techniques ("How?") -->
+    <section class="reveal delay-4">
+      <div class="text-center mb-8">
+        <h2 class="font-display type-section text-fg mb-1">Analytical Techniques</h2>
+        <p class="font-body type-secondary text-muted">Representation Forms</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="techniqueGrid">
+        
+        <!-- Event Representation -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Actor Set Event Representation</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Chronological mapping of discrete actions taken by identified agents within the system.</p>
+        </div>
+
+        <!-- State Snapshot -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">State Snapshot Representation</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Cross-sectional analysis capturing the static condition of variables at a specific point in time.</p>
+        </div>
+
+        <!-- Technique -> Product Matrix -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Technique → Product Matrix</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Mapping productive capabilities against outputs to identify industrial requirements and opportunities.</p>
+        </div>
+
+        <!-- Infrastructure Graph -->
+        <div class="method-card">
+          <div class="method-card-header">
+            <div class="method-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="5" cy="6" r="3"/>
+                <circle cx="19" cy="6" r="3"/>
+                <circle cx="12" cy="18" r="3"/>
+                <line x1="5" y1="9" x2="12" y2="15"/>
+                <line x1="19" y1="9" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <h3 class="font-display type-card-title font-medium text-fg">Infrastructure Graph</h3>
+          </div>
+          <p class="font-body type-secondary text-muted">Topological representation of critical systems, nodes, and the logistical connections between them.</p>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer py-12 md:py-16 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-6 mb-10">
+        <div class="md:col-span-5 text-center md:text-left">
+          <p class="font-display text-lg font-medium tracking-[0.2em] uppercase mb-2 footer-identity">Arbitristae</p>
+          <p class="font-body text-xs leading-relaxed max-w-xs mx-auto md:mx-0 footer-muted">
+            A research laboratory dedicated to the structured classification and comparative analysis of sovereign systems.
+          </p>
+        </div>
+        
+        <div class="md:col-span-3 text-center md:text-left">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase mb-3 footer-label">Navigation</p>
+          <nav class="flex flex-col items-center md:items-start gap-1.5" aria-label="Footer navigation">
+            <a href="about.html" class="footer-link font-body text-xs">About</a>
+            <a href="methodology.html" class="footer-link font-body text-xs">Methodology</a>
+            <a href="contact.html" class="footer-link font-body text-xs">Contact</a>
+          </nav>
+        </div>
+
+        <div class="md:col-span-4 text-center md:text-right">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase mb-3 footer-label">Status</p>
+          <div class="space-y-1.5 font-mono text-xs">
+            <div class="flex justify-center md:justify-end items-baseline gap-3">
+              <span class="footer-muted">Revision</span>
+              <span class="footer-value" id="footerRevision">v1.0</span>
+            </div>
+            <div class="flex justify-center md:justify-end items-baseline gap-3">
+              <span class="footer-muted">Updated</span>
+              <span class="footer-value" id="footerDate">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 footer-divider">
+        <p class="font-mono text-[10px] tracking-[0.15em] uppercase footer-muted">Index Gentium <span>v1.2</span></p>
+        <p class="font-display text-sm italic tracking-wide footer-muted">Ordo ex comparatione.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Theme & Scroll Logic
+    const themeToggle = document.getElementById('themeToggle');
+    const scrollProgress = document.getElementById('scrollProgress');
+    const projectHeader = document.getElementById('projectHeader');
+    const htmlElement = document.documentElement;
+
+    const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const getStoredTheme = () => localStorage.getItem('index-gentium-theme');
+
+    function setTheme(theme) {
+      htmlElement.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('index-gentium-theme', theme);
+    }
+    
+    setTheme(getStoredTheme() || getSystemTheme());
+
+    themeToggle.addEventListener('click', () => {
+      const newTheme = htmlElement.classList.contains('dark') ? 'light' : 'dark';
+      setTheme(newTheme);
+    });
+
+    function updateScrollProgress() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+      scrollProgress.style.transform = `scaleX(${progress})`;
+      if (scrollTop > 10) projectHeader.classList.add('scrolled');
+      else projectHeader.classList.remove('scrolled');
+    }
+
+    window.addEventListener('scroll', updateScrollProgress, { passive: true });
+    updateScrollProgress();
+
+    // Set current date
+    const dateEl = document.getElementById('footerDate');
+    const today = new Date();
+    dateEl.textContent = today.toISOString().split('T')[0];
+
+    // Reveal Animation
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce').matches;
+    if (!prefersReducedMotion) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    }
+  </script>
+</body>
+</html>

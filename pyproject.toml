@@ -1,0 +1,15 @@
+[project]
+name = "Index-Gentium"
+version = "0.1.0"
+description = "Index Gentium: Country Catalog"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.23",
+]
+
+[tool.uv.workspace]
+members = [
+    "venv",
+]
