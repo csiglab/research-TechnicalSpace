@@ -1,1240 +1,1050 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Technical Element Analysis: Photolithography</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0a0e14;
-      --bg-elevated: #0f1419;
-      --fg: #e6edf3;
-      --muted: #6e7681;
-      --accent: #00d4ff;
-      --accent-dim: #00d4ff33;
-      --card: #161b22;
-      --border: #30363d;
-      --warning: #f0883e;
-      --success: #3fb950;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    body {
-      font-family: 'Space Grotesk', sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      line-height: 1.6;
-    }
-
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .bg-grid {
-      background-image: 
-        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-
-    .accent-glow {
-      box-shadow: 0 0 30px var(--accent-dim), 0 0 60px rgba(0, 212, 255, 0.1);
-    }
-
-    .nav-link {
-      position: relative;
-      transition: color 0.2s ease;
-    }
-
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 1px;
-      background: var(--accent);
-      transition: width 0.3s ease;
-    }
-
-    .nav-link:hover::after,
-    .nav-link.active::after {
-      width: 100%;
-    }
-
-    .expandable-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease, opacity 0.3s ease;
-      opacity: 0;
-    }
-
-    .expandable-content.expanded {
-      max-height: 2000px;
-      opacity: 1;
-    }
-
-    .section-reveal {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .section-reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .data-bar {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .data-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #00ff88);
-      border-radius: 2px;
-      transition: width 1s ease;
-    }
-
-    .timeline-node {
-      position: relative;
-    }
-
-    .timeline-node::before {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: -24px;
-      width: 2px;
-      height: 24px;
-      background: var(--border);
-    }
-
-    .timeline-node:first-child::before {
-      display: none;
-    }
-
-    .dependency-line {
-      stroke-dasharray: 5, 5;
-      animation: dash 20s linear infinite;
-    }
-
-    @keyframes dash {
-      to { stroke-dashoffset: -100; }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.8; }
-    }
-
-    .pulse-dot {
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    .tab-btn {
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-    }
-
-    .tab-btn.active {
-      border-bottom-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .tab-btn:hover:not(.active) {
-      color: var(--fg);
-    }
-
-    button:focus-visible,
-    a:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .metric-card {
-      background: linear-gradient(135deg, var(--card) 0%, rgba(22, 27, 34, 0.5) 100%);
-      border: 1px solid var(--border);
-    }
-
-    .hover-lift {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .hover-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-    }
-  </style>
-</head>
-<body class="bg-grid min-h-screen">
-
-  <!-- Navigation -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--border)]">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-[var(--accent)] flex items-center justify-center">
-          <span class="font-mono text-[var(--bg)] text-xs font-bold">TE</span>
-        </div>
-        <span class="font-mono text-sm text-[var(--muted)]">Technical Element Analysis</span>
-      </div>
-      <div class="hidden md:flex items-center gap-8 text-sm">
-        <a href="#definition" class="nav-link text-[var(--muted)] hover:text-[var(--fg)]">Definition</a>
-        <a href="#origin" class="nav-link text-[var(--muted)] hover:text-[var(--fg)]">Origin</a>
-        <a href="#operationalization" class="nav-link text-[var(--muted)] hover:text-[var(--fg)]">Operationalization</a>
-        <a href="#topology" class="nav-link text-[var(--muted)] hover:text-[var(--fg)]">Topology</a>
-        <a href="#evolution" class="nav-link text-[var(--muted)] hover:text-[var(--fg)]">Evolution</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <header class="pt-32 pb-20 px-6 relative overflow-hidden">
-    <div class="absolute inset-0 opacity-20">
-      <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <defs>
-          <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M0 10 L8 10 L10 8 L10 0" fill="none" stroke="var(--accent)" stroke-width="0.3" opacity="0.3"/>
-            <circle cx="15" cy="15" r="1" fill="var(--accent)" opacity="0.2"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#circuit)"/>
-      </svg>
-    </div>
-    
-    <div class="max-w-7xl mx-auto relative">
-      <div class="mb-6">
-        <span class="font-mono text-xs tracking-widest text-[var(--accent)] uppercase">Constitutive Technique</span>
-      </div>
-      
-      <h1 class="text-5xl md:text-7xl font-light tracking-tight mb-6">
-        <span class="block text-[var(--fg)]">Photolithography</span>
-      </h1>
-      
-      <p class="text-xl md:text-2xl text-[var(--muted)] max-w-3xl mb-12 font-light">
-        The precision patterning technique that enables the fabrication of integrated circuits by transferring geometric patterns onto semiconductor substrates through optical exposure and chemical development.
-      </p>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl">
-        <div class="metric-card p-5 rounded-lg">
-          <div class="font-mono text-xs text-[var(--muted)] mb-2">Classification</div>
-          <div class="text-[var(--fg)] font-medium">Constitutive Technique</div>
-        </div>
-        <div class="metric-card p-5 rounded-lg">
-          <div class="font-mono text-xs text-[var(--muted)] mb-2">Technical Domain</div>
-          <div class="text-[var(--fg)] font-medium">Physical-Chemical</div>
-        </div>
-        <div class="metric-card p-5 rounded-lg">
-          <div class="font-mono text-xs text-[var(--muted)] mb-2">Primary Embodiment</div>
-          <div class="text-[var(--fg)] font-medium">Artifacts + Code</div>
-        </div>
-        <div class="metric-card p-5 rounded-lg">
-          <div class="font-mono text-xs text-[var(--muted)] mb-2">Current Node</div>
-          <div class="text-[var(--fg)] font-medium">3nm Process</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-6 pb-32">
-
-    <!-- Section 1: Formulation -->
-    <section id="definition" class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">01</span>
-        <h2 class="text-3xl md:text-4xl font-light">Formulation</h2>
-      </div>
-
-      <div class="grid lg:grid-cols-2 gap-8 mb-12">
-        <!-- Technique Characterization -->
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 hover-lift">
-          <h3 class="text-lg font-medium mb-4 flex items-center gap-3">
-            <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            Technique Characterization
-          </h3>
-          <p class="text-[var(--muted)] mb-6">Primary transformation performed by the technique:</p>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <p class="text-[var(--fg)]">
-              <span class="text-[var(--accent)]">Input:</span> Planar substrate + photosensitive resist coating<br>
-              <span class="text-[var(--accent)]">Process:</span> Selective optical exposure through patterned mask<br>
-              <span class="text-[var(--accent)]">Output:</span> Developed resist pattern enabling selective material modification
-            </p>
-          </div>
-        </div>
-
-        <!-- Technical Nature -->
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 hover-lift">
-          <h3 class="text-lg font-medium mb-4 flex items-center gap-3">
-            <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-            </svg>
-            Technical Nature
-          </h3>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-[var(--muted)]">Physical</span>
-              <div class="flex-1 mx-4 data-bar"><div class="data-bar-fill" style="width: 90%"></div></div>
-              <span class="font-mono text-sm">Primary</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-[var(--muted)]">Chemical</span>
-              <div class="flex-1 mx-4 data-bar"><div class="data-bar-fill" style="width: 85%"></div></div>
-              <span class="font-mono text-sm">Primary</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-[var(--muted)]">Informational</span>
-              <div class="flex-1 mx-4 data-bar"><div class="data-bar-fill" style="width: 60%"></div></div>
-              <span class="font-mono text-sm">Enabling</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-[var(--muted)]">Biological</span>
-              <div class="flex-1 mx-4 data-bar"><div class="data-bar-fill" style="width: 5%"></div></div>
-              <span class="font-mono text-sm">None</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Technique Formulation -->
-      <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 mb-8">
-        <h3 class="text-lg font-medium mb-6">Technique Formulation</h3>
-        <div class="grid md:grid-cols-5 gap-4 text-center">
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <div class="font-mono text-xs text-[var(--muted)] mb-2">Step 1</div>
-            <div class="text-sm">Wafer Preparation & Cleaning</div>
-          </div>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <div class="font-mono text-xs text-[var(--muted)] mb-2">Step 2</div>
-            <div class="text-sm">Photoresist Application</div>
-          </div>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <div class="font-mono text-xs text-[var(--muted)] mb-2">Step 3</div>
-            <div class="text-sm">Soft Bake</div>
-          </div>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <div class="font-mono text-xs text-[var(--muted)] mb-2">Step 4</div>
-            <div class="text-sm">Mask Alignment & Exposure</div>
-          </div>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <div class="font-mono text-xs text-[var(--muted)] mb-2">Step 5</div>
-            <div class="text-sm">Development</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Technique Embodiment -->
-      <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8">
-        <h3 class="text-lg font-medium mb-6">Technique Embodiment</h3>
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="border-l-2 border-[var(--accent)] pl-4">
-            <h4 class="font-medium mb-2">In Artifacts</h4>
-            <ul class="text-sm text-[var(--muted)] space-y-1">
-              <li>Stepper/Scanner optical systems</li>
-              <li>Photomask manufacturing equipment</li>
-              <li>Photoresist chemical formulations</li>
-              <li>Deep UV laser sources (193nm ArF, 13.5nm EUV)</li>
-            </ul>
-          </div>
-          <div class="border-l-2 border-[var(--warning)] pl-4">
-            <h4 class="font-medium mb-2">In Humans</h4>
-            <ul class="text-sm text-[var(--muted)] space-y-1">
-              <li>Process engineering expertise</li>
-              <li>Equipment maintenance tacit knowledge</li>
-              <li>Mask design methodology</li>
-              <li>Defect inspection skills</li>
-            </ul>
-          </div>
-          <div class="border-l-2 border-[var(--success)] pl-4">
-            <h4 class="font-medium mb-2">In Code</h4>
-            <ul class="text-sm text-[var(--muted)] space-y-1">
-              <li>OPC (Optical Proximity Correction) algorithms</li>
-              <li>Source-Mask Optimization (SMO) software</li>
-              <li>Computational lithography simulations</li>
-              <li>Automated process control systems</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Value Potential -->
-      <div class="mt-8 bg-gradient-to-r from-[var(--accent-dim)] to-transparent border border-[var(--accent)] rounded-lg p-8">
-        <h3 class="text-lg font-medium mb-4">Value Potential</h3>
-        <p class="text-[var(--fg)] mb-4">
-          Mastering photolithography confers strategic control over the most critical bottleneck in semiconductor manufacturing. The technique determines:
-        </p>
-        <div class="grid md:grid-cols-3 gap-6">
-          <div>
-            <div class="font-mono text-3xl text-[var(--accent)] mb-2">~35%</div>
-            <div class="text-sm text-[var(--muted)]">Of total IC manufacturing cost per wafer</div>
-          </div>
-          <div>
-            <div class="font-mono text-3xl text-[var(--accent)] mb-2">10-20</div>
-            <div class="text-sm text-[var(--muted)]">Lithography steps per device fabrication cycle</div>
-          </div>
-          <div>
-            <div class="font-mono text-3xl text-[var(--accent)] mb-2">$150M+</div>
-            <div class="text-sm text-[var(--muted)]">Per EUV scanner capital investment</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 2: Origin -->
-    <section id="origin" class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">02</span>
-        <h2 class="text-3xl md:text-4xl font-light">Origin</h2>
-      </div>
-
-      <div class="grid lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2">
-          <!-- Historical Timeline -->
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8">
-            <h3 class="text-lg font-medium mb-8">Historical Genesis</h3>
-            
-            <div class="relative">
-              <div class="absolute left-4 top-0 bottom-0 w-px bg-[var(--border)]"></div>
-              
-              <div class="space-y-8">
-                <div class="relative pl-12">
-                  <div class="absolute left-2 w-5 h-5 bg-[var(--bg)] border-2 border-[var(--accent)] rounded-full flex items-center justify-center">
-                    <div class="w-2 h-2 bg-[var(--accent)] rounded-full"></div>
-                  </div>
-                  <div class="font-mono text-xs text-[var(--accent)] mb-1">1826</div>
-                  <h4 class="font-medium mb-1">Photographic Origins</h4>
-                  <p class="text-sm text-[var(--muted)]">Nicéphore Niépce creates first permanent photograph using bitumen of Judea, establishing photochemical patterning principle.</p>
-                </div>
-
-                <div class="relative pl-12">
-                  <div class="absolute left-2 w-5 h-5 bg-[var(--bg)] border-2 border-[var(--accent)] rounded-full flex items-center justify-center">
-                    <div class="w-2 h-2 bg-[var(--accent)] rounded-full"></div>
-                  </div>
-                  <div class="font-mono text-xs text-[var(--accent)] mb-1">1955</div>
-                  <h4 class="font-medium mb-1">First Semiconductor Application</h4>
-                  <p class="text-sm text-[var(--muted)]">Jay Lathrop at Diamond Ordnance Fuze Laboratory uses photolithography for transistor fabrication, solving the precision patterning problem for microelectronics.</p>
-                </div>
-
-                <div class="relative pl-12">
-                  <div class="absolute left-2 w-5 h-5 bg-[var(--bg)] border-2 border-[var(--accent)] rounded-full flex items-center justify-center">
-                    <div class="w-2 h-2 bg-[var(--accent)] rounded-full"></div>
-                  </div>
-                  <div class="font-mono text-xs text-[var(--accent)] mb-1">1959</div>
-                  <h4 class="font-medium mb-1">Planar Process Integration</h4>
-                  <p class="text-sm text-[var(--muted)]">Jean Hoerni at Fairchild Semiconductor invents the planar process, making photolithography foundational to integrated circuit manufacturing.</p>
-                </div>
-
-                <div class="relative pl-12">
-                  <div class="absolute left-2 w-5 h-5 bg-[var(--bg)] border-2 border-[var(--accent)] rounded-full flex items-center justify-center">
-                    <div class="w-2 h-2 bg-[var(--accent)] rounded-full"></div>
-                  </div>
-                  <div class="font-mono text-xs text-[var(--accent)] mb-1">1980s-Present</div>
-                  <h4 class="font-medium mb-1">Wavelength Reduction Era</h4>
-                  <p class="text-sm text-[var(--muted)]">Continuous progression: G-line (436nm) → I-line (365nm) → KrF (248nm) → ArF (193nm) → EUV (13.5nm), each enabling smaller feature sizes.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-6">
-          <!-- Problem Context -->
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">Constraint Origin</h3>
-            <p class="text-sm text-[var(--muted)] mb-4">
-              The technique emerged from the need to create precisely defined microscopic patterns on semiconductor substrates. Early approaches:
-            </p>
-            <ul class="text-sm space-y-2">
-              <li class="flex gap-2">
-                <span class="text-[var(--accent)]">×</span>
-                <span class="text-[var(--muted)]">Hand-drawn masks (inconsistent, slow)</span>
-              </li>
-              <li class="flex gap-2">
-                <span class="text-[var(--accent)]">×</span>
-                <span class="text-[var(--muted)]">Mechanical ruling (limited complexity)</span>
-              </li>
-              <li class="flex gap-2">
-                <span class="text-[var(--accent)]">×</span>
-                <span class="text-[var(--muted)]">Electron-beam direct write (too slow for production)</span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Enabling Principles -->
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">Enabling Principles</h3>
-            <div class="space-y-3">
-              <div class="bg-[var(--bg)] rounded p-3 border border-[var(--border)]">
-                <div class="font-mono text-xs text-[var(--accent)]">Optical</div>
-                <div class="text-sm">Rayleigh resolution criterion, projection optics</div>
-              </div>
-              <div class="bg-[var(--bg)] rounded p-3 border border-[var(--border)]">
-                <div class="font-mono text-xs text-[var(--accent)]">Chemical</div>
-                <div class="text-sm">Photoresist chemistry, developer selectivity</div>
-              </div>
-              <div class="bg-[var(--bg)] rounded p-3 border border-[var(--border)]">
-                <div class="font-mono text-xs text-[var(--accent)]">Materials</div>
-                <div class="text-sm">Purified optical glass, precision mechanics</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 3: Operationalization -->
-    <section id="operationalization" class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">03</span>
-        <h2 class="text-3xl md:text-4xl font-light">Operationalization</h2>
-      </div>
-
-      <!-- Tab Navigation -->
-      <div class="flex gap-1 mb-8 bg-[var(--card)] rounded-lg p-1 inline-flex">
-        <button class="tab-btn active px-6 py-3 text-sm font-medium rounded transition-colors text-[var(--muted)]" data-tab="inputs">
-          Inputs
-        </button>
-        <button class="tab-btn px-6 py-3 text-sm font-medium rounded transition-colors text-[var(--muted)]" data-tab="process">
-          Process Flow
-        </button>
-        <button class="tab-btn px-6 py-3 text-sm font-medium rounded transition-colors text-[var(--muted)]" data-tab="characteristics">
-          Knowledge Characteristics
-        </button>
-      </div>
-
-      <!-- Tab Content -->
-      <div id="tab-inputs" class="tab-content">
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h4 class="font-medium mb-4 flex items-center gap-2">
-              <div class="w-2 h-2 bg-[var(--accent)] rounded-full"></div>
-              Materials
-            </h4>
-            <ul class="text-sm text-[var(--muted)] space-y-2">
-              <li>Silicon wafers (300mm standard)</li>
-              <li>Photoresist (chemically amplified)</li>
-              <li>Anti-reflective coatings (ARC)</li>
-              <li>Developer solutions (TMAH)</li>
-              <li>Rinse chemicals (DI water, solvents)</li>
-            </ul>
-          </div>
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h4 class="font-medium mb-4 flex items-center gap-2">
-              <div class="w-2 h-2 bg-[var(--warning)] rounded-full"></div>
-              Energy
-            </h4>
-            <ul class="text-sm text-[var(--muted)] space-y-2">
-              <li>UV/DUV photon flux (precise dose control)</li>
-              <li>Thermal energy (soft/hard bake)</li>
-              <li>Cleanroom HVAC (temperature ±0.1°C)</li>
-              <li>Vibration isolation infrastructure</li>
-              <li>Ultra-pure water systems</li>
-            </ul>
-          </div>
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h4 class="font-medium mb-4 flex items-center gap-2">
-              <div class="w-2 h-2 bg-[var(--success)] rounded-full"></div>
-              Information
-            </h4>
-            <ul class="text-sm text-[var(--muted)] space-y-2">
-              <li>Mask design data (GDSII format)</li>
-              <li>OPC correction patterns</li>
-              <li>Process recipes (dose, focus)</li>
-              <li>Alignment mark coordinates</li>
-              <li>Inspection metrology data</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div id="tab-process" class="tab-content hidden">
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8">
-          <div class="grid md:grid-cols-2 gap-8">
-            <div class="space-y-4">
-              <div class="flex gap-4 items-start">
-                <div class="w-8 h-8 bg-[var(--bg)] border border-[var(--border)] rounded flex items-center justify-center font-mono text-sm text-[var(--accent)]">1</div>
-                <div>
-                  <h5 class="font-medium">Wafer Preparation</h5>
-                  <p class="text-sm text-[var(--muted)]">Cleaning, dehydration bake, HMDS priming for resist adhesion</p>
-                </div>
-              </div>
-              <div class="flex gap-4 items-start">
-                <div class="w-8 h-8 bg-[var(--bg)] border border-[var(--border)] rounded flex items-center justify-center font-mono text-sm text-[var(--accent)]">2</div>
-                <div>
-                  <h5 class="font-medium">Photoresist Coating</h5>
-                  <p class="text-sm text-[var(--muted)]">Spin coating to achieve uniform film thickness (50-200nm typical)</p>
-                </div>
-              </div>
-              <div class="flex gap-4 items-start">
-                <div class="w-8 h-8 bg-[var(--bg)] border border-[var(--border)] rounded flex items-center justify-center font-mono text-sm text-[var(--accent)]">3</div>
-                <div>
-                  <h5 class="font-medium">Soft Bake</h5>
-                  <p class="text-sm text-[var(--muted)]">Remove solvent, stabilize resist film</p>
-                </div>
-              </div>
-            </div>
-            <div class="space-y-4">
-              <div class="flex gap-4 items-start">
-                <div class="w-8 h-8 bg-[var(--bg)] border border-[var(--border)] rounded flex items-center justify-center font-mono text-sm text-[var(--accent)]">4</div>
-                <div>
-                  <h5 class="font-medium">Exposure</h5>
-                  <p class="text-sm text-[var(--muted)]">Precise photon dose through mask pattern (step-and-scan)</p>
-                </div>
-              </div>
-              <div class="flex gap-4 items-start">
-                <div class="w-8 h-8 bg-[var(--bg)] border border-[var(--border)] rounded flex items-center justify-center font-mono text-sm text-[var(--accent)]">5</div>
-                <div>
-                  <h5 class="font-medium">Post-Exposure Bake</h5>
-                  <p class="text-sm text-[var(--muted)]">Acid diffusion control for chemically amplified resists</p>
-                </div>
-              </div>
-              <div class="flex gap-4 items-start">
-                <div class="w-8 h-8 bg-[var(--bg)] border border-[var(--border)] rounded flex items-center justify-center font-mono text-sm text-[var(--accent)]">6</div>
-                <div>
-                  <h5 class="font-medium">Development & Inspection</h5>
-                  <p class="text-sm text-[var(--muted)]">Pattern development, CD measurement, defect inspection</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="tab-characteristics" class="tab-content hidden">
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h4 class="font-medium mb-4">Codifiability</h4>
-            <div class="mb-4">
-              <div class="flex justify-between text-sm mb-2">
-                <span class="text-[var(--muted)]">Explicit Knowledge</span>
-                <span class="font-mono text-[var(--accent)]">75%</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 75%"></div></div>
-            </div>
-            <p class="text-sm text-[var(--muted)]">
-              Process recipes, exposure parameters, and equipment specifications are highly codified. However, optimization remains partially tacit.
-            </p>
-          </div>
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h4 class="font-medium mb-4">Trainability</h4>
-            <div class="mb-4">
-              <div class="flex justify-between text-sm mb-2">
-                <span class="text-[var(--muted)]">Transfer Ease</span>
-                <span class="font-mono text-[var(--warning)]">40%</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 40%"></div></div>
-            </div>
-            <p class="text-sm text-[var(--muted)]">
-              Requires years of experience for process engineers. Equipment operation trainable in months, but troubleshooting and optimization require extensive tacit knowledge.
-            </p>
-          </div>
-          <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-            <h4 class="font-medium mb-4">Automatability</h4>
-            <div class="mb-4">
-              <div class="flex justify-between text-sm mb-2">
-                <span class="text-[var(--muted)]">Machine Execution</span>
-                <span class="font-mono text-[var(--success)]">95%</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 95%"></div></div>
-            </div>
-            <p class="text-sm text-[var(--muted)]">
-              Highly automated in production. Scanners run with minimal human intervention. AI-driven process control increasingly replacing human optimization.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 4: Topology -->
-    <section id="topology" class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">04</span>
-        <h2 class="text-3xl md:text-4xl font-light">Topology</h2>
-      </div>
-
-      <!-- Dependency Map -->
-      <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 mb-8">
-        <h3 class="text-lg font-medium mb-6">Technique Dependency Network</h3>
-        <div class="relative overflow-x-auto">
-          <svg viewBox="0 0 900 300" class="w-full min-w-[600px]">
-            <!-- Upstream -->
-            <g transform="translate(50, 50)">
-              <text x="0" y="-20" class="fill-[var(--muted)] text-xs uppercase font-mono">Upstream Dependencies</text>
-              <rect x="0" y="0" width="140" height="50" rx="4" class="fill-[var(--bg)] stroke-[var(--border)]"/>
-              <text x="70" y="30" text-anchor="middle" class="fill-[var(--fg)] text-sm">Optical Engineering</text>
-              
-              <rect x="0" y="70" width="140" height="50" rx="4" class="fill-[var(--bg)] stroke-[var(--border)]"/>
-              <text x="70" y="100" text-anchor="middle" class="fill-[var(--fg)] text-sm">Photochemistry</text>
-              
-              <rect x="0" y="140" width="140" height="50" rx="4" class="fill-[var(--bg)] stroke-[var(--border)]"/>
-              <text x="70" y="170" text-anchor="middle" class="fill-[var(--fg)] text-sm">Precision Mechanics</text>
-            </g>
-
-            <!-- Center Node -->
-            <g transform="translate(380, 100)">
-              <rect x="0" y="0" width="140" height="100" rx="4" class="fill-[var(--accent-dim)] stroke-[var(--accent)] stroke-2"/>
-              <text x="70" y="45" text-anchor="middle" class="fill-[var(--accent)] text-lg font-medium">Photolithography</text>
-              <text x="70" y="70" text-anchor="middle" class="fill-[var(--muted)] text-xs">Constitutive Technique</text>
-            </g>
-
-            <!-- Downstream -->
-            <g transform="translate(710, 50)">
-              <text x="0" y="-20" class="fill-[var(--muted)] text-xs uppercase font-mono">Downstream Enables</text>
-              <rect x="0" y="0" width="140" height="50" rx="4" class="fill-[var(--bg)] stroke-[var(--border)]"/>
-              <text x="70" y="30" text-anchor="middle" class="fill-[var(--fg)] text-sm">Etching</text>
-              
-              <rect x="0" y="70" width="140" height="50" rx="4" class="fill-[var(--bg)] stroke-[var(--border)]"/>
-              <text x="70" y="100" text-anchor="middle" class="fill-[var(--fg)] text-sm">Ion Implantation</text>
-              
-              <rect x="0" y="140" width="140" height="50" rx="4" class="fill-[var(--bg)] stroke-[var(--border)]"/>
-              <text x="70" y="170" text-anchor="middle" class="fill-[var(--fg)] text-sm">Thin Film Deposition</text>
-            </g>
-
-            <!-- Connection Lines -->
-            <line x1="190" y1="75" x2="380" y2="130" class="stroke-[var(--accent)] stroke-1 dependency-line" opacity="0.5"/>
-            <line x1="190" y1="145" x2="380" y2="150" class="stroke-[var(--accent)] stroke-1 dependency-line" opacity="0.5"/>
-            <line x1="190" y1="215" x2="380" y2="170" class="stroke-[var(--accent)] stroke-1 dependency-line" opacity="0.5"/>
-            
-            <line x1="520" y1="130" x2="710" y2="75" class="stroke-[var(--accent)] stroke-1 dependency-line" opacity="0.5"/>
-            <line x1="520" y1="150" x2="710" y2="145" class="stroke-[var(--accent)] stroke-1 dependency-line" opacity="0.5"/>
-            <line x1="520" y1="170" x2="710" y2="215" class="stroke-[var(--accent)] stroke-1 dependency-line" opacity="0.5"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Integration Depth -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-          <h4 class="font-medium mb-4">Technique Integration</h4>
-          <p class="text-sm text-[var(--muted)] mb-4">
-            Photolithography integrates with multiple techniques in a highly choreographed sequence:
-          </p>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3 p-3 bg-[var(--bg)] rounded border border-[var(--border)]">
-              <span class="text-xs font-mono text-[var(--accent)]">T+0</span>
-              <span class="text-sm">Lithography → Etch → Strip cycle</span>
-            </div>
-            <div class="flex items-center gap-3 p-3 bg-[var(--bg)] rounded border border-[var(--border)]">
-              <span class="text-xs font-mono text-[var(--accent)]">T+1</span>
-              <span class="text-sm">Lithography → Implant → Anneal</span>
-            </div>
-            <div class="flex items-center gap-3 p-3 bg-[var(--bg)] rounded border border-[var(--border)]">
-              <span class="text-xs font-mono text-[var(--accent)]">T+2</span>
-              <span class="text-sm">Lithography → CMP → Clean</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-          <h4 class="font-medium mb-4">Production Chain Position</h4>
-          <div class="relative">
-            <div class="h-2 bg-[var(--border)] rounded">
-              <div class="absolute left-0 top-0 h-2 w-1/3 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dim)] rounded-l"></div>
-            </div>
-            <div class="flex justify-between mt-4 text-xs">
-              <div class="text-center">
-                <div class="w-3 h-3 bg-[var(--accent)] rounded-full mx-auto mb-2"></div>
-                <span class="text-[var(--muted)]">Upstream</span>
-              </div>
-              <div class="text-center">
-                <div class="w-4 h-4 bg-[var(--accent)] rounded-full mx-auto mb-2 ring-4 ring-[var(--accent-dim)]"></div>
-                <span class="text-[var(--fg)]">Lithography</span>
-              </div>
-              <div class="text-center">
-                <div class="w-3 h-3 bg-[var(--border)] rounded-full mx-auto mb-2"></div>
-                <span class="text-[var(--muted)]">Downstream</span>
-              </div>
-            </div>
-          </div>
-          <p class="text-sm text-[var(--muted)] mt-6">
-            Positioned at the critical transformation node: converting abstract design intent into physical structure. Occupies approximately 30% of fab floor space and cycle time.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 5: Product Instantiation -->
-    <section class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">05</span>
-        <h2 class="text-3xl md:text-4xl font-light">Product Instantiation</h2>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-6">
-        <div class="bg-[var(--card)] border border-[var(--accent)] rounded-lg p-6 relative overflow-hidden">
-          <div class="absolute top-0 right-0 bg-[var(--accent)] text-[var(--bg)] text-xs font-mono px-3 py-1">CORE</div>
-          <h4 class="font-medium mb-3">Integrated Circuits</h4>
-          <p class="text-sm text-[var(--muted)] mb-4">
-            The defining manufacturing technique. Determines transistor density, performance, and yield. Moore's Law progress enabled by lithography advancement.
-          </p>
-          <div class="text-xs font-mono text-[var(--accent)]">Differentiating capability</div>
-        </div>
-
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 relative overflow-hidden">
-          <div class="absolute top-0 right-0 bg-[var(--muted)] text-[var(--bg)] text-xs font-mono px-3 py-1">ENABLING</div>
-          <h4 class="font-medium mb-3">MEMS Devices</h4>
-          <p class="text-sm text-[var(--muted)] mb-4">
-            Enables micro-electromechanical structures for sensors, actuators, and microfluidics. Less demanding resolution than advanced logic.
-          </p>
-          <div class="text-xs font-mono text-[var(--muted)]">Supporting capability</div>
-        </div>
-
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 relative overflow-hidden">
-          <div class="absolute top-0 right-0 bg-[var(--muted)] text-[var(--bg)] text-xs font-mono px-3 py-1">AUXILIARY</div>
-          <h4 class="font-medium mb-3">Printed Circuit Boards</h4>
-          <p class="text-sm text-[var(--muted)] mb-4">
-            Used for fine-line PCB patterning. Lower precision requirements. Competing techniques include direct imaging and laser direct structuring.
-          </p>
-          <div class="text-xs font-mono text-[var(--muted)]">Non-critical application</div>
-        </div>
-      </div>
-
-      <!-- Expandable Detail -->
-      <div class="mt-6">
-        <button class="w-full bg-[var(--card)] border border-[var(--border)] rounded-lg p-4 text-left flex justify-between items-center hover:border-[var(--accent)] transition-colors" id="expand-btn" aria-expanded="false">
-          <span class="font-medium">View Detailed Product Categories</span>
-          <svg class="w-5 h-5 text-[var(--muted)] transition-transform" id="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        <div class="expandable-content" id="expandable">
-          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-            <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-              <div class="font-mono text-xs text-[var(--accent)] mb-2">Logic Processors</div>
-              <div class="text-sm text-[var(--muted)]">CPUs, GPUs, AI accelerators, mobile SoCs</div>
-            </div>
-            <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-              <div class="font-mono text-xs text-[var(--accent)] mb-2">Memory</div>
-              <div class="text-sm text-[var(--muted)]">DRAM, NAND Flash, emerging NVM</div>
-            </div>
-            <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-              <div class="font-mono text-xs text-[var(--accent)] mb-2">Analog/RF</div>
-              <div class="text-sm text-[var(--muted)]">Power management, RF front-ends, sensors</div>
-            </div>
-            <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-              <div class="font-mono text-xs text-[var(--accent)] mb-2">Optoelectronics</div>
-              <div class="text-sm text-[var(--muted)]">Image sensors, photonic ICs, displays</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 6: Evolution -->
-    <section id="evolution" class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">06</span>
-        <h2 class="text-3xl md:text-4xl font-light">Evolution</h2>
-      </div>
-
-      <!-- Resolution Progression -->
-      <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 mb-8">
-        <h3 class="text-lg font-medium mb-6">Resolution Evolution Timeline</h3>
-        <div class="overflow-x-auto">
-          <div class="flex gap-4 min-w-[800px] pb-4">
-            <div class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded p-4">
-              <div class="font-mono text-2xl text-[var(--fg)] mb-1">436nm</div>
-              <div class="text-xs text-[var(--muted)] mb-2">G-line (1980s)</div>
-              <div class="text-xs font-mono text-[var(--accent)]">~1.5μm features</div>
-            </div>
-            <div class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded p-4">
-              <div class="font-mono text-2xl text-[var(--fg)] mb-1">365nm</div>
-              <div class="text-xs text-[var(--muted)] mb-2">I-line (1990s)</div>
-              <div class="text-xs font-mono text-[var(--accent)]">~0.35μm features</div>
-            </div>
-            <div class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded p-4">
-              <div class="font-mono text-2xl text-[var(--fg)] mb-1">248nm</div>
-              <div class="text-xs text-[var(--muted)] mb-2">KrF (mid-1990s)</div>
-              <div class="text-xs font-mono text-[var(--accent)]">~0.25μm features</div>
-            </div>
-            <div class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded p-4">
-              <div class="font-mono text-2xl text-[var(--fg)] mb-1">193nm</div>
-              <div class="text-xs text-[var(--muted)] mb-2">ArF (2000s)</div>
-              <div class="text-xs font-mono text-[var(--accent)]">~90nm features</div>
-            </div>
-            <div class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded p-4">
-              <div class="font-mono text-2xl text-[var(--fg)] mb-1">193nm+</div>
-              <div class="text-xs text-[var(--muted)] mb-2">Immersion (2005+)</div>
-              <div class="text-xs font-mono text-[var(--accent)]">~38nm features</div>
-            </div>
-            <div class="flex-1 bg-gradient-to-br from-[var(--accent-dim)] to-[var(--card)] border border-[var(--accent)] rounded p-4">
-              <div class="font-mono text-2xl text-[var(--accent)] mb-1">13.5nm</div>
-              <div class="text-xs text-[var(--muted)] mb-2">EUV (2019+)</div>
-              <div class="text-xs font-mono text-[var(--accent)]">~3nm features</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-8">
-        <!-- R&D Trajectories -->
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-          <h4 class="font-medium mb-4">Active R&D Trajectories</h4>
-          <div class="space-y-4">
-            <div class="border-l-2 border-[var(--accent)] pl-4">
-              <h5 class="text-sm font-medium">High-NA EUV</h5>
-              <p class="text-xs text-[var(--muted)]">Numerical aperture increase from 0.33 to 0.55 for sub-2nm nodes</p>
-              <div class="mt-2 text-xs font-mono text-[var(--accent)]">Target: 2025 production</div>
-            </div>
-            <div class="border-l-2 border-[var(--warning)] pl-4">
-              <h5 class="text-sm font-medium">Direct Self-Assembly (DSA)</h5>
-              <p class="text-xs text-[var(--muted)]">Using block copolymers for pitch multiplication</p>
-              <div class="mt-2 text-xs font-mono text-[var(--warning)]">Status: Research phase</div>
-            </div>
-            <div class="border-l-2 border-[var(--muted)] pl-4">
-              <h5 class="text-sm font-medium">Electron Beam Multi-Beam</h5>
-              <p class="text-xs text-[var(--muted)]">Multi-column e-beam for maskless lithography</p>
-              <div class="mt-2 text-xs font-mono text-[var(--muted)]">Status: Low-volume specialty</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Performance Frontiers -->
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-          <h4 class="font-medium mb-4">Performance Frontiers Being Pushed</h4>
-          <div class="space-y-4">
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span>Resolution</span>
-                <span class="font-mono text-[var(--accent)]">8nm pitch achieved</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 85%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span>Throughput</span>
-                <span class="font-mono text-[var(--accent)]">175+ wph (EUV)</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 70%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span>Overlay Accuracy</span>
-                <span class="font-mono text-[var(--accent)]">&lt;2nm required</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 90%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span>Cost Efficiency</span>
-                <span class="font-mono text-[var(--warning)]">Plateauing</span>
-              </div>
-              <div class="data-bar"><div class="data-bar-fill" style="width: 45%"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Substitutes -->
-      <div class="mt-8 bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-        <h4 class="font-medium mb-4">Potential Substitutes & Competing Techniques</h4>
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <h5 class="font-medium text-sm mb-2">Nanoimprint Lithography</h5>
-            <p class="text-xs text-[var(--muted)] mb-2">Mechanical pattern transfer. Lower cost but defect density challenges.</p>
-            <div class="text-xs font-mono text-[var(--warning)]">Threat level: Moderate</div>
-          </div>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <h5 class="font-medium text-sm mb-2">Directed Self-Assembly</h5>
-            <p class="text-xs text-[var(--muted)] mb-2">Molecular self-organization. Complementary rather than replacement.</p>
-            <div class="text-xs font-mono text-[var(--success)]">Threat level: Low</div>
-          </div>
-          <div class="bg-[var(--bg)] rounded p-4 border border-[var(--border)]">
-            <h5 class="font-medium text-sm mb-2">Multi-Beam E-Beam</h5>
-            <p class="text-xs text-[var(--muted)] mb-2">Maskless approach. Throughput remains fundamental limitation.</p>
-            <div class="text-xs font-mono text-[var(--success)]">Threat level: Low</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 7: Replicability & Diffusion -->
-    <section class="py-20 section-reveal">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono text-5xl text-[var(--accent)] opacity-30">07</span>
-        <h2 class="text-3xl md:text-4xl font-light">Replicability & Diffusion</h2>
-      </div>
-
-      <!-- Diffusion Constraints -->
-      <div class="grid md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 text-center">
-          <div class="text-3xl font-mono text-[var(--accent)] mb-2">$18B+</div>
-          <div class="text-sm text-[var(--muted)]">Capital Required for EUV Fab Entry</div>
-        </div>
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 text-center">
-          <div class="text-3xl font-mono text-[var(--accent)] mb-2">3</div>
-          <div class="text-sm text-[var(--muted)]">EUV Scanner Suppliers Globally</div>
-        </div>
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 text-center">
-          <div class="text-3xl font-mono text-[var(--accent)] mb-2">15-20</div>
-          <div class="text-sm text-[var(--muted)]">Years to Technology Mastery</div>
-        </div>
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 text-center">
-          <div class="text-3xl font-mono text-[var(--accent)] mb-2">500+</div>
-          <div class="text-sm text-[var(--muted)]">Specialized Suppliers in Ecosystem</div>
-        </div>
-      </div>
-
-      <!-- Learning Curve -->
-      <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 mb-8">
-        <h3 class="text-lg font-medium mb-6">Learning Curve Characteristics</h3>
-        <div class="grid md:grid-cols-2 gap-8">
-          <div>
-            <h4 class="text-sm font-medium mb-4 text-[var(--muted)]">Cumulative Experience vs. Cost</h4>
-            <svg viewBox="0 0 400 200" class="w-full">
-              <defs>
-                <linearGradient id="curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" class="stop-[var(--accent)]"/>
-                  <stop offset="100%" class="stop-[var(--success)]"/>
-                </linearGradient>
-              </defs>
-              <path d="M 20 180 Q 100 150 150 100 Q 200 60 280 40 Q 340 30 380 28" fill="none" stroke="url(#curveGrad)" stroke-width="3"/>
-              <circle cx="80" cy="140" r="4" class="fill-[var(--accent)]"/>
-              <circle cx="150" cy="100" r="4" class="fill-[var(--accent)]"/>
-              <circle cx="250" cy="55" r="4" class="fill-[var(--accent)]"/>
-              <circle cx="350" cy="30" r="4" class="fill-[var(--accent)]"/>
-              <text x="20" y="195" class="fill-[var(--muted)] text-xs">Low Volume</text>
-              <text x="350" y="195" class="fill-[var(--muted)] text-xs">High Volume</text>
-              <text x="10" y="20" class="fill-[var(--muted)] text-xs">Cost/Unit</text>
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-medium mb-4 text-[var(--muted)]">Mastery Prerequisites</h4>
-            <div class="space-y-3">
-              <div class="flex gap-3">
-                <div class="w-6 h-6 bg-[var(--accent-dim)] rounded flex items-center justify-center text-xs">1</div>
-                <div>
-                  <div class="text-sm font-medium">Scientific Foundation</div>
-                  <div class="text-xs text-[var(--muted)]">Optics, quantum mechanics, polymer chemistry, plasma physics</div>
-                </div>
-              </div>
-              <div class="flex gap-3">
-                <div class="w-6 h-6 bg-[var(--accent-dim)] rounded flex items-center justify-center text-xs">2</div>
-                <div>
-                  <div class="text-sm font-medium">Tooling Infrastructure</div>
-                  <div class="text-xs text-[var(--muted)]">Cleanrooms (Class 1), ultra-pure utilities, precision metrology</div>
-                </div>
-              </div>
-              <div class="flex gap-3">
-                <div class="w-6 h-6 bg-[var(--accent-dim)] rounded flex items-center justify-center text-xs">3</div>
-                <div>
-                  <div class="text-sm font-medium">Organizational Context</div>
-                  <div class="text-xs text-[var(--muted)]">Vertical integration, supplier relationships, talent pipeline</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Capability Unlocks -->
-      <div class="bg-gradient-to-r from-[var(--accent-dim)] to-transparent border border-[var(--accent)] rounded-lg p-8">
-        <h3 class="text-lg font-medium mb-6">Capabilities Unlocked by Mastery</h3>
-        <div class="grid md:grid-cols-3 gap-6">
-          <div>
-            <h4 class="font-mono text-sm text-[var(--accent)] mb-3">Technological</h4>
-            <ul class="text-sm text-[var(--muted)] space-y-1">
-              <li>Design-to-silicon execution</li>
-              <li>Node transition capability</li>
-              <li>Yield optimization expertise</li>
-              <li>Advanced packaging enablement</li>
-            </ul>
-          </div>
-          <div>
-            <h4 class="font-mono text-sm text-[var(--accent)] mb-3">Strategic</h4>
-            <ul class="text-sm text-[var(--muted)] space-y-1">
-              <li>Supply chain sovereignty</li>
-              <li>Technology roadmap control</li>
-              <li>Intellectual property generation</li>
-              <li>Geopolitical leverage</li>
-            </ul>
-          </div>
-          <div>
-            <h4 class="font-mono text-sm text-[var(--accent)] mb-3">Economic</h4>
-            <ul class="text-sm text-[var(--muted)] space-y-1">
-              <li>Value capture in semiconductor chain</li>
-              <li>Ecosystem lock-in effects</li>
-              <li>Platform for adjacent technologies</li>
-              <li>High-barrier competitive moat</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- References -->
-    <section class="py-20 border-t border-[var(--border)] section-reveal">
-      <div class="flex items-center gap-4 mb-8">
-        <h2 class="text-2xl font-light">References</h2>
-      </div>
-      <div class="grid md:grid-cols-2 gap-4 text-sm">
-        <a href="https://www.bremontix.xyz/lab/ar/Locus-Social-Realitatis/Facet/Technical/Technology/" target="_blank" rel="noopener" class="bg-[var(--card)] border border-[var(--border)] rounded p-4 flex items-center gap-3 hover:border-[var(--accent)] transition-colors">
-          <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-          <span>Technology Framework - Bremontix Lab</span>
-        </a>
-        <div class="bg-[var(--card)] border border-[var(--border)] rounded p-4 flex items-center gap-3">
-          <svg class="w-5 h-5 text-[var(--muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
-          <span class="text-[var(--muted)]">Mack, C. "Fundamental Principles of Optical Lithography" (2007)</span>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-[var(--border)] py-8">
-    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-6 h-6 bg-[var(--accent)] flex items-center justify-center">
-          <span class="font-mono text-[var(--bg)] text-xs font-bold">TE</span>
-        </div>
-        <span class="font-mono text-xs text-[var(--muted)]">Technical Element Analysis Framework</span>
-      </div>
-      <div class="text-xs text-[var(--muted)]">
-        Report generated following Technical Element Spec methodology
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    // Initialize all variables first
-    const sections = document.querySelectorAll('.section-reveal');
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-    const expandBtn = document.getElementById('expand-btn');
-    const expandable = document.getElementById('expandable');
-    const expandIcon = document.getElementById('expand-icon');
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    // Reduced motion check
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Intersection Observer for scroll reveal
-    if (!prefersReducedMotion) {
-      const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-          if (entry.isIntersecting) {
-            setTimeout(() => {
-              entry.target.classList.add('visible');
-            }, index * 100);
-          }
-        });
-      }, observerOptions);
-
-      sections.forEach(section => observer.observe(section));
-    } else {
-      // If reduced motion, show all sections immediately
-      sections.forEach(section => section.classList.add('visible'));
-    }
-
-    // Tab functionality
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tabId = btn.dataset.tab;
-        
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        tabContents.forEach(content => {
-          content.classList.add('hidden');
-          if (content.id === `tab-${tabId}`) {
-            content.classList.remove('hidden');
-          }
-        });
-      });
-    });
-
-    // Expandable section
-    if (expandBtn && expandable && expandIcon) {
-      expandBtn.addEventListener('click', () => {
-        const isExpanded = expandable.classList.contains('expanded');
-        expandable.classList.toggle('expanded');
-        expandIcon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
-        expandBtn.setAttribute('aria-expanded', !isExpanded);
-      });
-    }
-
-    // Active nav link on scroll
-    const sectionIds = ['definition', 'origin', 'operationalization', 'topology', 'evolution'];
-    
-    function updateActiveNav() {
-      const scrollPos = window.scrollY + 150;
-      
-      sectionIds.forEach(id => {
-        const section = document.getElementById(id);
-        if (section) {
-          const top = section.offsetTop;
-          const height = section.offsetHeight;
-          
-          if (scrollPos >= top && scrollPos < top + height) {
-            navLinks.forEach(link => {
-              link.classList.remove('active');
-              if (link.getAttribute('href') === `#${id}`) {
-                link.classList.add('active');
-              }
-            });
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Analysis: Ion Implantation in Semiconductor Manufacturing</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --text: #334155;
+            --text-light: #64748b;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --highlight: #fef3c7;
+            --success: #10b981;
+            --warning: #f59e0b;
         }
-      });
-    }
 
-    window.addEventListener('scroll', updateActiveNav, { passive: true });
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    // Animate data bars on scroll
-    const dataBarFills = document.querySelectorAll('.data-bar-fill');
-    
-    if (!prefersReducedMotion) {
-      const barObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const fill = entry.target;
-            const width = fill.style.width;
-            fill.style.width = '0%';
-            setTimeout(() => {
-              fill.style.width = width;
-            }, 100);
-            barObserver.unobserve(fill);
-          }
-        });
-      }, { threshold: 0.5 });
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
 
-      dataBarFills.forEach(fill => barObserver.observe(fill));
-    }
-  </script>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 80px 0 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(59,130,246,0.2);
+            color: var(--accent-light);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 3.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 700px;
+            font-weight: 300;
+        }
+
+        .meta-bar {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .meta-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        main {
+            padding-bottom: 80px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        .section-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin: 28px 0 16px;
+            font-weight: 600;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin: 20px 0 12px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .concept-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid var(--accent);
+            padding: 24px;
+            border-radius: 0 12px 12px 0;
+            margin: 24px 0;
+        }
+
+        .concept-box strong {
+            color: var(--primary);
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin: 24px 0;
+        }
+
+        .card {
+            background: var(--bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .process-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+            align-items: center;
+        }
+
+        .process-step {
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .process-step::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            color: var(--text-light);
+            font-weight: 700;
+        }
+
+        .process-step:last-child::after {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 14px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: var(--bg);
+        }
+
+        .highlight-box {
+            background: var(--highlight);
+            border: 1px solid #fcd34d;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .metric {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 24px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .timeline-date {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .citation {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: var(--bg);
+            color: var(--text);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 4px 4px 4px 0;
+            border: 1px solid var(--border);
+        }
+
+        .tag.accent {
+            background: rgba(59,130,246,0.1);
+            color: var(--accent);
+            border-color: rgba(59,130,246,0.3);
+        }
+
+        .topology-map {
+            background: var(--bg);
+            padding: 24px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .topology-level {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 12px 0;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .topology-arrow {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin: 8px 0;
+        }
+
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .references {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin-top: 40px;
+        }
+
+        .references h3 {
+            margin-top: 0;
+        }
+
+        .references ol {
+            padding-left: 20px;
+        }
+
+        .references li {
+            margin-bottom: 12px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            .section { padding: 24px; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <span class="badge">Constitutive Technique Analysis</span>
+            <h1>Ion Implantation in Semiconductor Manufacturing</h1>
+            <p class="subtitle">A rigorous technical analysis of the dominant doping technique for modern integrated circuit fabrication, examining its formulation, operationalization, topology, and strategic position within the semiconductor production chain.</p>
+        </div>
+    </header>
+
+    <div class="meta-bar">
+        <div class="container">
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <div class="meta-icon">⚛️</div>
+                    <div>
+                        <div class="meta-label">Technical Domain</div>
+                        <div class="meta-value">Physical/Chemical Hybrid</div>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-icon">🔧</div>
+                    <div>
+                        <div class="meta-label">Element Type</div>
+                        <div class="meta-value">Constitutive Technique</div>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-icon">📅</div>
+                    <div>
+                        <div class="meta-label">Industrial Maturation</div>
+                        <div class="meta-value">1970s–Present</div>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-icon">🏭</div>
+                    <div>
+                        <div class="meta-label">Market Structure</div>
+                        <div class="meta-value">Oligopoly (3 Players)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- Section 1: Formulation -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <h2>Formulation</h2>
+            </div>
+
+            <div class="concept-box">
+                <strong>Technique Characterization</strong>
+                Ion implantation is a material modification technique that introduces dopant atoms into a semiconductor substrate through high-energy ion bombardment. The technique performs the transformation of intrinsic semiconductor material (pure silicon) into extrinsic semiconductor material with controlled electrical conductivity, creating either p-type (hole-rich) or n-type (electron-rich) regions essential for transistor operation.
+            </div>
+
+            <h3>Technique Formulation</h3>
+            <p>The formal description of ion implantation follows a multi-stage physical process:</p>
+
+            <div class="process-flow">
+                <div class="process-step">Ion Generation</div>
+                <div class="process-step">Mass Analysis</div>
+                <div class="process-step">Acceleration</div>
+                <div class="process-step">Beam Transport</div>
+                <div class="process-step">Implantation</div>
+                <div class="process-step">Annealing</div>
+            </div>
+
+            <p>Mathematically, the ion stopping process is governed by the <strong>Lindhard-Scharff-Schiøtt (LSS) theory</strong>, which describes how energetic ions lose energy through nuclear and electronic stopping mechanisms. The projected range \(R_p\) and straggle (standard deviation of range) \(\Delta R_p\) determine the spatial distribution of implanted dopants, typically following a Gaussian profile:</p>
+
+            <div class="highlight-box">
+                <strong>Dopant Concentration Profile:</strong> N(x) = N<sub>max</sub> · exp[-(x - R<sub>p</sub>)² / (2ΔR<sub>p</sub>²)]
+                <br><br>
+                Where N<sub>max</sub> = Dose / (√(2π) · ΔR<sub>p</sub>), and Dose is measured in ions/cm²
+            </div>
+
+            <h3>Technical Nature</h3>
+            <p>Ion implantation represents a <strong>hybrid physical-chemical technique</strong>:</p>
+            <ul style="margin: 16px 0; padding-left: 24px;">
+                <li><strong>Physical domain:</strong> Electromagnetic acceleration, ion beam optics, vacuum physics, collision cascades</li>
+                <li><strong>Chemical domain:</strong> Dopant activation through lattice substitution, chemical bonding modification</li>
+                <li><strong>Informational domain:</strong> Process control systems, dose monitoring, beam scanning algorithms</li>
+            </ul>
+
+            <h3>Technique Embodiment</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">🔩 In Artifacts</div>
+                    <p>Ion implanters (Purion, VIISta series), mass spectrometers, electrostatic accelerators, end stations with robotic wafer handling, vacuum chambers maintained at &lt;10⁻⁵ mbar</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">👤 In Humans</div>
+                    <p>Process engineers with expertise in beamline physics, vacuum technology, and semiconductor device physics; tacit knowledge in recipe optimization and troubleshooting beam instabilities</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">💻 In Code</div>
+                    <p>Beam control algorithms, dose monitoring software, Statistical Process Control (SPC) systems, Monte Carlo simulation tools (SRIM/TRIM), machine learning for predictive maintenance</p>
+                </div>
+            </div>
+
+            <h3>Value Potential</h3>
+            <p>Mastering ion implantation unlocks several tiers of value:</p>
+            <div class="metric-grid">
+                <div class="metric">
+                    <span class="metric-value">10¹¹-10¹⁷</span>
+                    <div class="metric-label">Dose Range (atoms/cm²)</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">&lt;1nm</span>
+                    <div class="metric-label">Depth Precision</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">20-30</span>
+                    <div class="metric-label">Implants per Modern IC</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">250+</span>
+                    <div class="metric-label">Wafers/Hour Throughput</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Origin -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <h2>Origin</h2>
+            </div>
+
+            <h3>Historical Genesis</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">1911</div>
+                    <p><strong>Fundamental Physics:</strong> Ernest Rutherford and students at Cavendish Laboratory construct the first helium-based ion implantation apparatus, establishing the foundational physics of ion-solid interactions.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1954</div>
+                    <p><strong>Semiconductor Application:</strong> William Shockley at Bell Labs files patent US 2,787,564 "Forming of Semiconductor Devices by Ionic Bombardment," demonstrating remarkable prescience about process issues including annealing requirements—though the patent expired in 1974, just as the commercial market emerged, yielding minimal royalties.</p>
+                    <p class="citation">Source: Axcelis Technologies historical documentation [^10^]</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1960s</div>
+                    <p><strong>Technical Convergence:</strong> Experience from building research accelerators improves hardware reliability. Theorists refine ion stopping hypotheses, enabling precise placement prediction. Experimenters determine that high-temperature post-implant annealing (900-1100°C) repairs crystal damage.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1976</div>
+                    <p><strong>Industrial Maturation:</strong> Varian Associates develops the DF-4, the first in-line, wafer-to-wafer high-throughput (~200 wafers/hour) ion implanter. By 1978, it becomes the most widely used commercial system.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1970s-1980s</div>
+                    <p><strong>Market Transition:</strong> Ion implantation rapidly displaces thermal diffusion as the dominant doping method due to superior precision, reliability, and repeatability. IBM and Western Electric initially build in-house systems; commercial vendors emerge from HVEC spin-offs and IC manufacturer technology transfers.</p>
+                </div>
+            </div>
+
+            <h3>Emergence Constraints</h3>
+            <p>The technique emerged under specific technical and economic constraints:</p>
+            <ul style="margin: 16px 0; padding-left: 24px;">
+                <li><strong>Device scaling pressure:</strong> As transistor dimensions shrank, thermal diffusion's inability to provide precise spatial control became a limiting factor</li>
+                <li><strong>Purity requirements:</strong> The need for ultra-pure dopant species without contamination from masking materials</li>
+                <li><strong>Scientific enablement:</strong> Development of high-voltage DC power supplies, RF electromagnetic wave generation, and vacuum technology from particle physics research</li>
+            </ul>
+        </section>
+
+        <!-- Section 3: Operationalization -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <h2>Operationalization</h2>
+            </div>
+
+            <h3>Process Execution</h3>
+            <p>The operational sequence involves eight distinct stages:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Function</th>
+                        <th>Critical Parameters</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Ion Generation</td>
+                        <td>Source gas (arsine, phosphine, BF₃) ionized in plasma chamber</td>
+                        <td>Source stability, ion species purity</td>
+                    </tr>
+                    <tr>
+                        <td>2. Ion Extraction</td>
+                        <td>High-voltage electrostatic field extracts positive ions</td>
+                        <td>Extraction voltage, beam current</td>
+                    </tr>
+                    <tr>
+                        <td>3. Mass Analysis</td>
+                        <td>Magnetic field separates desired ions by mass/charge ratio</td>
+                        <td>Magnetic field strength, mass resolution</td>
+                    </tr>
+                    <tr>
+                        <td>4. Beam Acceleration</td>
+                        <td>Electric fields provide kinetic energy for penetration</td>
+                        <td>Acceleration voltage (keV to MeV range)</td>
+                    </tr>
+                    <tr>
+                        <td>5. Beam Transport</td>
+                        <td>Electrostatic lenses focus and shape the beam</td>
+                        <td>Beam uniformity, divergence control</td>
+                    </tr>
+                    <tr>
+                        <td>6. Beam Scanning</td>
+                        <td>Electromagnetic scanning distributes beam across wafer</td>
+                        <td>Scan speed, dose uniformity (&lt;1% variation)</td>
+                    </tr>
+                    <tr>
+                        <td>7. Implantation</td>
+                        <td>Ions embed into substrate; wafer heated to minimize damage</td>
+                        <td>Dose accuracy, angle control</td>
+                    </tr>
+                    <tr>
+                        <td>8. Annealing</td>
+                        <td>Rapid thermal processing repairs lattice damage, activates dopants</td>
+                        <td>Temperature (900-1100°C), time, ambient</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="citation">Process framework adapted from Matsusada Precision technical documentation [^2^]</p>
+
+            <h3>Knowledge Characteristics</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">📖 Codifiability</div>
+                    <p><strong>High for process parameters:</strong> Dose, energy, angle, and species are fully explicit and machine-controllable. <strong>Moderate for physical understanding:</strong> Stopping theory, channeling effects, and damage accumulation require specialized expertise. <strong>Low for recipe optimization:</strong> Tacit knowledge in balancing throughput vs. damage vs. activation.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🎓 Trainability</div>
+                    <p><strong>Moderate difficulty:</strong> Basic operation trainable through standardized protocols. Expertise in troubleshooting beam instabilities, optimizing channeling reduction through tilt/twist angles, and managing contamination requires years of fab experience.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🤖 Automatability</div>
+                    <p><strong>Very high:</strong> Modern implanters feature full automation with cassette-to-cassette wafer handling, automated beam tuning, and Statistical Process Control. Human intervention primarily for maintenance, recipe development, and exception handling.</p>
+                </div>
+            </div>
+
+            <h3>System Classification</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>System Type</th>
+                        <th>Beam Current</th>
+                        <th>Energy Range</th>
+                        <th>Primary Application</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>High-Current</td>
+                        <td>&gt;10 mA</td>
+                        <td>~80 keV</td>
+                        <td>Source/drain formation, shallow high-concentration doping</td>
+                    </tr>
+                    <tr>
+                        <td>Medium-Current</td>
+                        <td>~mA range</td>
+                        <td>3 keV – 250 keV</td>
+                        <td>Gate-channel formation, precise low-dose doping</td>
+                    </tr>
+                    <tr>
+                        <td>High-Energy</td>
+                        <td>Variable</td>
+                        <td>250 keV – 7+ MeV</td>
+                        <td>Well structures, deep junctions, backside processing</td>
+                    </tr>
+                    <tr>
+                        <td>Specialized (PIII)</td>
+                        <td>Pulsed plasma</td>
+                        <td>Variable</td>
+                        <td>Batch processing, conformal doping</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="citation">System classification from Matsusada Precision and Axcelis technical specifications [^2^][^13^]</p>
+        </section>
+
+        <!-- Section 4: Topology -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <h2>Topology</h2>
+            </div>
+
+            <h3>Integration Architecture</h3>
+            <div class="topology-map">
+                <div class="topology-level">
+                    <strong>Upstream Dependencies:</strong> Ultra-high purity dopant gases (arsine, phosphine, diborane), precision vacuum systems, high-voltage power electronics, computational lithography for mask alignment
+                </div>
+                <div class="topology-arrow">↓</div>
+                <div class="topology-level">
+                    <strong>Ion Implantation Core:</strong> Beam generation → Mass analysis → Acceleration → Target chamber → Annealing integration
+                </div>
+                <div class="topology-arrow">↓</div>
+                <div class="topology-level">
+                    <strong>Downstream Dependencies:</strong> Rapid Thermal Processing (RTP) systems, metrology (SIMS, spreading resistance), subsequent lithography and etch steps
+                </div>
+            </div>
+
+            <h3>Production Chain Position</h3>
+            <p>Ion implantation occupies a <strong>critical path position</strong> in the front-end-of-line (FEOL) manufacturing sequence:</p>
+
+            <div class="highlight-box">
+                <strong>Process Flow Context:</strong> Oxidation → Lithography → Etch → <span style="color: var(--accent); font-weight: 600;">ION IMPLANTATION</span> → Annealing → Deposition → Metallization
+            </div>
+
+            <p>Key topological characteristics:</p>
+            <ul style="margin: 16px 0; padding-left: 24px;">
+                <li><strong>Mask dependency:</strong> Requires patterned photoresist or oxide hard masks to define implantation windows</li>
+                <li><strong>Self-alignment capability:</strong> Gate electrodes can serve as implant masks, enabling self-aligned source/drain structures</li>
+                <li><strong>Thermal budget coupling:</strong> Subsequent annealing steps must balance dopant activation against diffusion broadening</li>
+                <li><strong>Metrology feedback:</strong> Requires immediate feedback from sheet resistance and junction depth measurements</li>
+            </ul>
+
+            <h3>System Interdependencies</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">🔗 Tight Coupling</div>
+                    <p>Annealing systems (RTP, laser annealing), lithography alignment, vacuum infrastructure, gas delivery systems</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🔗 Loose Coupling</div>
+                    <p>Final test and packaging, backend metallization (after planarization), external mask shops</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Product Instantiation -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <h2>Product Instantiation</h2>
+            </div>
+
+            <h3>Application Hierarchy</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>Strategic Role</th>
+                        <th>Technical Requirements</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CMOS Source/Drain</td>
+                        <td><span class="tag accent">Core/Differentiating</span></td>
+                        <td>Ultra-shallow junctions (&lt;20nm), high activation, minimal diffusion</td>
+                    </tr>
+                    <tr>
+                        <td>Gate Channel (V<sub>th</sub> adjust)</td>
+                        <td><span class="tag accent">Core/Differentiating</span></td>
+                        <td>Precise dose control (10¹¹-10¹² cm⁻²), angle accuracy, uniformity</td>
+                    </tr>
+                    <tr>
+                        <td>Well Formation</td>
+                        <td><span class="tag">Enabling</span></td>
+                        <td>High energy (MeV), deep penetration, retrograde profiles</td>
+                    </tr>
+                    <tr>
+                        <td>SiC Power Devices</td>
+                        <td><span class="tag accent">Core/Differentiating</span></td>
+                        <td>High temperature implants, aluminum doping, damage management</td>
+                    </tr>
+                    <tr>
+                        <td>SOI (SIMOX)</td>
+                        <td><span class="tag">Enabling</span></td>
+                        <td>Very high dose oxygen (10¹⁸ cm⁻²), specialized equipment</td>
+                    </tr>
+                    <tr>
+                        <td>Image Sensors</td>
+                        <td><span class="tag">Enabling</span></td>
+                        <td>Ultra-high energy (up to 15 MeV), deep pixel isolation</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Strategic Classification</h3>
+            <div class="concept-box">
+                <strong>Differentiating Applications</strong>
+                Advanced logic (2-3nm nodes), DRAM (HBM3E/HBM4), SiC power devices—where implant precision directly determines device performance, yield, and power consumption. In these domains, ion implantation is a <strong>core competence</strong> and competitive differentiator.
+            </div>
+
+            <p>Modern microprocessors require up to <strong>20-30 ion implant steps</strong> per wafer, spanning orders of magnitude in both energy (100 eV to 10 MeV) and dose (10¹¹ to 10¹⁷ atoms/cm²) [^7^].</p>
+        </section>
+
+        <!-- Section 6: Evolution -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <h2>Evolution</h2>
+            </div>
+
+            <h3>R&D Trajectories</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">📉 Sub-keV Implantation</div>
+                    <p>Development of ultra-low energy systems (&lt;1 keV) for sub-10nm junctions. Challenge: maintaining beam current at low energies due to space charge effects.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🔥 Millisecond Annealing</div>
+                    <p>Flash-assisted RTP and laser annealing to minimize transient enhanced diffusion (TED) while maximizing activation. Critical for maintaining as-implanted profiles.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">⚡ Wide Bandgap Materials</div>
+                    <p>SiC and GaN implantation requires high-temperature processing (600°C during implant) due to diffusion difficulty. Aluminum and nitrogen doping for power electronics.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🎯 3D Integration</div>
+                    <p>Implantation for vertical transistors (VFETs), gate-all-around (GAA) structures, and 3D NAND. Requires precise angled implants and conformal doping.</p>
+                </div>
+            </div>
+
+            <h3>Performance Frontiers</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Current State (2024)</th>
+                        <th>Target/Frontier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Minimum Energy</td>
+                        <td>~200 eV</td>
+                        <td>&lt;100 eV with usable current</td>
+                    </tr>
+                    <tr>
+                        <td>Dose Uniformity</td>
+                        <td>&lt;0.5% (1σ)</td>
+                        <td>&lt;0.3% across 300mm</td>
+                    </tr>
+                    <tr>
+                        <td>Angle Control</td>
+                        <td>±0.1°</td>
+                        <td>±0.05° for 3D structures</td>
+                    </tr>
+                    <tr>
+                        <td>Wafer Size</td>
+                        <td>300mm (Si), 200mm (SiC)</td>
+                        <td>450mm (pending), 300mm SiC</td>
+                    </tr>
+                    <tr>
+                        <td>Throughput</td>
+                        <td>250-450 wph</td>
+                        <td>500+ wph with parallel processing</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Substitutes and Competition</h3>
+            <p><strong>Thermal diffusion</strong> remains a historical substitute but has been largely displaced except for specific applications (e.g., some power device junctions). <strong>Plasma doping (PLAD)</strong> offers conformal doping for 3D structures but lacks precision. <strong>In-situ doping</strong> during epitaxy competes for some layer formation but cannot achieve the spatial selectivity of implantation.</p>
+
+            <p>No fundamental substitute threatens ion implantation's position as the dominant doping technique for precision semiconductor manufacturing through at least the 2nm technology node.</p>
+        </section>
+
+        <!-- Section 7: Replicability & Diffusion -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">7</div>
+                <h2>Replicability & Diffusion</h2>
+            </div>
+
+            <h3>Replication Mechanisms</h3>
+            <p>Ion implantation technology replicates through:</p>
+            <ul style="margin: 16px 0; padding-left: 24px;">
+                <li><strong>Equipment acquisition:</strong> Purchase of commercial implanters (capital intensity: $3-15M per system)</li>
+                <li><strong>Technology licensing:</strong> Joint ventures (e.g., Sumitomo Eaton Nova in Japan)</li>
+                <li><strong>Foundry services:</strong> Outsourced implantation (e.g., Coherent, the largest implantation foundry)</li>
+                <li><strong>Process transfer:</strong> Recipe sharing between fabs using matched equipment</li>
+            </ul>
+
+            <h3>Diffusion Constraints</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">💰 Capital Barriers</div>
+                    <p>Implanter cost: $3-15M per unit. A large fab requires ~20 implanters ($60-300M). Cleanroom infrastructure adds 10x multiplier. Total entry barrier: $500M+ for meaningful capacity.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🧠 Knowledge Barriers</div>
+                    <p>Requires expertise in beamline physics, vacuum technology, crystallography, and device physics. Recipe development involves years of tacit knowledge accumulation.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">🏭 Infrastructure</div>
+                    <p>Requires ultra-high purity gas delivery, specialized waste handling (toxic dopant gases), Class 1-10 cleanroom environment, and stable power/vibration isolation.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">⚖️ Regulatory</div>
+                    <p>Toxic gas handling (arsine, phosphine), radiation safety for high-energy systems, and export controls on advanced equipment (US EAR regulations).</p>
+                </div>
+            </div>
+
+            <h3>Learning Curve Dynamics</h3>
+            <p>The ion implantation industry exhibits a <strong>mature learning curve</strong> with incremental improvements:</p>
+            <ul style="margin: 16px 0; padding-left: 24px;">
+                <li>Cost per transistor implanted has decreased by orders of magnitude (some memory circuits now &lt;20 nanodollars/transistor) [^10^]</li>
+                <li>Throughput improvements from ~100 wph (1970s) to 250-450 wph (current)</li>
+                <li>Wafer size evolution: 100mm → 150mm → 200mm → 300mm (with 450mm stalled)</li>
+                <li>Process precision improved from ±10% dose uniformity (1970s) to ±0.5% (current)</li>
+            </ul>
+
+            <h3>Market Structure</h3>
+            <div class="highlight-box">
+                <strong>Global Ion Implanter Market (2024):</strong><br>
+                • Applied Materials: ~62.65% market share (re-entered via Varian acquisition, 2011)<br>
+                • Axcelis Technologies: ~21-35% market share, 70-90% share in SiC power devices<br>
+                • Nissin/SEN: ~10-15% market share, strong in Japan and mature nodes<br>
+                • Chinese entrants: Nascent, potential regional disruption threat
+            </div>
+            <p class="citation">Market data from industry analysis [^13^][^15^]</p>
+
+            <h3>Capabilities Unlocked</h3>
+            <p>Mastery of ion implantation enables:</p>
+            <div class="metric-grid">
+                <div class="metric">
+                    <span class="metric-value">Logic</span>
+                    <div class="metric-label">2-3nm CMOS fabrication</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">Memory</span>
+                    <div class="metric-label">HBM4, 3D NAND</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">Power</span>
+                    <div class="metric-label">SiC MOSFETs, IGBTs</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-value">RF/Analog</span>
+                    <div class="metric-label">GaN HEMTs, BAW filters</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- References -->
+        <div class="references">
+            <h3>References & Data Sources</h3>
+            <ol>
+                <li>Wafer World. "Silicon Ion Implantation for Semiconductors: Techniques, Challenges, and What to Consider." Technical Article, 2025.</li>
+                <li>Matsusada Precision. "Fundamentals of Ion Implantation: Processes and Equipment." Technical Documentation, 2025.</li>
+                <li>Sinelab. "Doping Semiconductors at Home." DIY Semiconductor Fabrication Guide, 2025.</li>
+                <li>Wafer World. "The Complete Guide to Doping in Semiconductors." Educational Resource, 2024.</li>
+                <li>Applied Physics USA. "What is Silicon Wafer Doping? A Deep Dive." Technical Blog.</li>
+                <li>Hamamatsu Photonics. "Ion Implantation Applications." Semiconductor Manufacturing Guide.</li>
+                <li>Wittmann, Robert. "Semiconductor Doping Technology." Dissertation, TU Wien.</li>
+                <li>University Wafer. "Silicon Wafer Doping Techniques Compared." Technical Comparison.</li>
+                <li>City University of Hong Kong. "Chapter 9: Ion Implantation." Course Materials (AP6120).</li>
+                <li>Rubin, Leonard & Poate, John. "Ion Implantation in Silicon Technology." Axcelis Technical Paper/Industrial Physicist, 2003/2019.</li>
+                <li>Coherent. "Ion Implantation for Semiconductor Devices." Technical Blog, 2023.</li>
+                <li>Renesas. "Semiconductor Device Manufacturing Process." Industry Analysis, 2023.</li>
+                <li>Porter's Five Forces Analysis. "Competitive Landscape of Axcelis Company." Strategic Analysis, 2025.</li>
+                <li>Bodycote. "What is Ion Implantation?" Technical Article, 2025.</li>
+                <li>Matrix BCG. "Competitive Landscape of Axcelis Company." Market Analysis, 2025.</li>
+                <li>Axcelis Technologies. "About Us: Ion Implantation Equipment." Corporate Documentation, 2026.</li>
+                <li>Idonus. "Surface Treatment by Ion Implantation (Preview)." White Paper, 2018.</li>
+                <li>Cambridge University Press. "History of Industrial and Commercial Ion Implantation 1906..." Academic Paper.</li>
+                <li>Springer. "A Historical View of the Role of Ion-Implantation Defects in PN Junction Formation for Devices." MRS Proceedings, 2000.</li>
+            </ol>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p style="opacity: 0.8; margin-bottom: 8px;">Technical Element Analysis Report</p>
+            <p style="opacity: 0.6; font-size: 0.9rem;">Generated following the Technical Element Specification Framework</p>
+            <p style="opacity: 0.5; font-size: 0.8rem; margin-top: 16px;">© 2026 — Analytical Report</p>
+        </div>
+    </footer>
 </body>
 </html>
